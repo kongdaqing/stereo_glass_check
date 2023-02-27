@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 project(opencv_display_demo)
 
+set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
@@ -23,6 +24,7 @@ include_directories(
   ${ETHZ_APRILTAG2_INCLUDES}
   ${aslam_cameras_april_INCLUDES}
   /opt/MVS/include
+  include
 )
 
 add_executable(opencv_display_demo src/main.cpp)

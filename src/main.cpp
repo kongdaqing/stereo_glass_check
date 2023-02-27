@@ -242,6 +242,9 @@ int main() {
     std::vector<bool> validPointsLeft, validPointsRight;
     grid.computeObservation(left_im_calib, outPointsLeft, validPointsLeft);
     grid.computeObservation(right_im_calib, outPointsRight, validPointsRight);
+
+  
+
     for (int i = 0; i < validPointsLeft.size(); i++) {
       if (validPointsLeft[i] && validPointsRight[i]) {
         cv::circle(left_im_calib, cv::Point2d{outPointsLeft(i, 0), outPointsLeft(i, 1)}, 5, 255, 2);
