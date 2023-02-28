@@ -3,7 +3,7 @@
 #include "eigen3/Eigen/Dense"
 using namespace Eigen;
 
-typedef std::vector<Vector2d> VecPointD;
+typedef std::vector<cv::Point2d> VecPointD;
 
 
 
@@ -46,18 +46,26 @@ private:
         bool filled_;
     };
 
+    cv::Mat left_map_x_,left_map_y_;
+    cv::Mat right_map_x_,right_map_y_;
+    cv::Mat K_;
     void CreateErrorItem(std::string title,cv::Mat& im,cv::Point2i start_pos,int w,int h,float range,float thres,float error);
     /* data */
 public:
-
     EstimateStereoPose();
     ~EstimateStereoPose();
 
-    void EstimatePose(cv::Mat& left_im_calib,cv::Mat& right_im_calib,
+    void AnalysisStereoPose(const cv::Mat& left_im_raw,const cv::Mat& right_im_raw);
+
+    Eigen::Vector3d EstimatePose(cv::Mat& left_im_calib,cv::Mat& right_im_calib,
             const VecPointD& left_points,const VecPointD& right_points);
 
     void DisplayError(cv::Mat& img,std::vector<Vector3d>& angle);
 
     void TestDisplayRectangle();
+
+    bool GenerateRemapMatrix(std::string stereo_yml,int width,int height);
+
+    
 };
 

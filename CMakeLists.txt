@@ -33,8 +33,10 @@ target_link_libraries(opencv_display_demo ${OpenCV_LIBS} ${MVS_LIB} pthread asla
 
 
 add_library(estimate_stereo_pose src/estimate_stereo_pose.cpp)
-target_link_libraries(estimate_stereo_pose ${OpenCV_LIBS})
+target_link_libraries(estimate_stereo_pose ${OpenCV_LIBS} aslam_cameras_april)
 
 add_executable(unit_test_rectangle unitTests/test_display_rectangle.cpp)
-
 target_link_libraries(unit_test_rectangle estimate_stereo_pose)
+
+add_executable(unit_test_stereo_alignment unitTests/test_stereo_alignment.cpp)
+target_link_libraries(unit_test_stereo_alignment estimate_stereo_pose)
