@@ -116,15 +116,19 @@ Eigen::Vector3d EstimateStereoPose::EstimatePose(cv::Mat& left_im_calib,cv::Mat&
 
 
 
-void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point2i start_pos,int w,int h,float thres,float range,float error) {
+void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point2i start_pos,int w,int h,float thres,float range,float error,bool black_background) {
+    uint8_t b_gray = 0;
+    if (black_background) {
+        b_gray = 255;
+    }
     //step0:Create Title
     cv::Point2i title_origin;
     title_origin.x = start_pos.x - 30;
     title_origin.y = start_pos.y + h*2/3;
-    cv::putText(im,title,title_origin,cv::FONT_HERSHEY_SIMPLEX,0.85,cv::Scalar(255,255,255),2);
+    cv::putText(im,title,title_origin,cv::FONT_HERSHEY_SIMPLEX,0.85,cv::Scalar(b_gray,b_gray,b_gray),2);
     
     //step1:Create Outside Rectangle
-    RectangleItem outside_rec(w,h,start_pos,cv::Scalar(255,255,255));
+    RectangleItem outside_rec(w,h,start_pos,cv::Scalar(b_gray,b_gray,b_gray),2,false);
     outside_rec.CreateRectangle(im);
     cv::Point2i mid_start_pos = outside_rec.GetMiddlePosition();
 
@@ -156,17 +160,17 @@ void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point
     int line_end_y = mid_start_pos.y +  2 * h;
     cv::Point2i start_line(mid_start_pos.x,line_start_y);
     cv::Point2i end_line(mid_start_pos.x,line_end_y);
-    cv::line(im,start_line,end_line,cv::Scalar(0,0,0),2);
+    cv::line(im,start_line,end_line,cv::Scalar(b_gray,b_gray,b_gray),2);
     
     int line_thres_start_x1 = mid_start_pos.x - thres * width_ratio;
     cv::Point2i thres_line_start1(line_thres_start_x1,mid_start_pos.y);
     cv::Point2i thres_line_end1(line_thres_start_x1,mid_start_pos.y + h);
-    cv::line(im,thres_line_start1,thres_line_end1,cv::Scalar(0,255,0),2);
+    cv::line(im,thres_line_start1,thres_line_end1,cv::Scalar(b_gray,b_gray,b_gray),2);
 
     int line_thres_start_x2 = mid_start_pos.x + thres * width_ratio;
     cv::Point2i thres_line_start2(line_thres_start_x2,mid_start_pos.y);
     cv::Point2i thres_line_end2(line_thres_start_x2,mid_start_pos.y + h);
-    cv::line(im,thres_line_start2,thres_line_end2,cv::Scalar(0,255,0),2);   
+    cv::line(im,thres_line_start2,thres_line_end2,cv::Scalar(b_gray,b_gray,b_gray),2);   
 
     //step4: Note
     std::stringstream ss1,ss2;
@@ -175,17 +179,17 @@ void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point
     ss2 << std::fixed << std::setprecision(1) << -thres;
     std::string thres_str2 = ss2.str();
     cv::Point2i thres_txt_start1(line_thres_start_x1 - 15,mid_start_pos.y + 2 * h);
-    cv::putText(im,thres_str1,thres_txt_start1,cv::FONT_HERSHEY_SIMPLEX,0.55,cv::Scalar(0,0,0),2);
+    cv::putText(im,thres_str1,thres_txt_start1,cv::FONT_HERSHEY_SIMPLEX,0.55,cv::Scalar(b_gray,b_gray,b_gray),2);
     cv::Point2i thres_txt_start2(line_thres_start_x2 - 20,mid_start_pos.y + 2 * h);
-    cv::putText(im,thres_str2,thres_txt_start2,cv::FONT_HERSHEY_SIMPLEX,0.55,cv::Scalar(0,0,0),2);
+    cv::putText(im,thres_str2,thres_txt_start2,cv::FONT_HERSHEY_SIMPLEX,0.55,cv::Scalar(b_gray,b_gray,b_gray),2);
 
 }
 
 void EstimateStereoPose::TestDisplayRectangle() {
     cv::Mat image(500, 500, CV_8UC3, cv::Scalar(255, 255, 255));
-    CreateErrorItem("x",image,cv::Point2i(50,100),400,30,3.0,10.0,-5.0);
-    CreateErrorItem("y",image,cv::Point2i(50,200),400,30,3.0,10.0,2.0);
-    CreateErrorItem("z",image,cv::Point2i(50,300),400,30,3.0,10.0,12.0);
+    CreateErrorItem("x",image,cv::Point2i(50,100),400,30,3.0,10.0,-5.0,false);
+    CreateErrorItem("y",image,cv::Point2i(50,200),400,30,3.0,10.0,2.0,false);
+    CreateErrorItem("z",image,cv::Point2i(50,300),400,30,3.0,10.0,12.0,false);
 
     cv::imshow("test_rect",image);
 

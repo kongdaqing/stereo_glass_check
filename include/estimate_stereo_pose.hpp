@@ -49,7 +49,7 @@ private:
     cv::Mat left_map_x_,left_map_y_;
     cv::Mat right_map_x_,right_map_y_;
     cv::Mat K_;
-    void CreateErrorItem(std::string title,cv::Mat& im,cv::Point2i start_pos,int w,int h,float range,float thres,float error);
+    void CreateErrorItem(std::string title,cv::Mat& im,cv::Point2i start_pos,int w,int h,float range,float thres,float error,bool black_background = true);
     /* data */
 public:
     EstimateStereoPose();
