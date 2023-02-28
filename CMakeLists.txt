@@ -30,3 +30,11 @@ include_directories(
 add_executable(opencv_display_demo src/main.cpp)
 
 target_link_libraries(opencv_display_demo ${OpenCV_LIBS} ${MVS_LIB} pthread aslam_cameras_april ethz_apriltag2)
+
+
+add_library(estimate_stereo_pose src/estimate_stereo_pose.cpp)
+target_link_libraries(estimate_stereo_pose ${OpenCV_LIBS})
+
+add_executable(unit_test_rectangle unitTests/test_display_rectangle.cpp)
+
+target_link_libraries(unit_test_rectangle estimate_stereo_pose)
