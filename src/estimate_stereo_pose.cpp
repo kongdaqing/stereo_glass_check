@@ -36,7 +36,6 @@ bool EstimateStereoPose::GenerateRemapMatrix(std::string stereo_yml,int width,in
     }
     cv::stereoRectify(K1, D1, K2, D2, cv::Size(width, height), R, T, R1, R2, P1, P2, Q);
     K_ = P1.rowRange(0,3).colRange(0,3).clone();
-    std::cout << "K : \n" << K_ << std::endl;
     cv::initUndistortRectifyMap(K1, D1, R1, P1, cv::Size(width, height), CV_16SC2, left_map_x_, left_map_y_);
     cv::initUndistortRectifyMap(K2, D2, R2, P2, cv::Size(width, height), CV_16SC2, right_map_x_, right_map_y_);
     return true;
@@ -90,9 +89,10 @@ void EstimateStereoPose::AnalysisStereoPose(const cv::Mat& left_im_raw,const cv:
         printf("Please input apriltag image which can be detect!\n");
     } else {
         Eigen::Vector3d euler_deg =  EstimatePose(left_im_calib,right_im_calib,left_points,right_points);
-        CreateErrorItem("x",right_im_calib,cv::Point2i(50,100),400,30,1.0,3.0,euler_deg[0]);
-        CreateErrorItem("y",right_im_calib,cv::Point2i(50,200),400,30,1.0,3.0,euler_deg[1]);
-        CreateErrorItem("z",right_im_calib,cv::Point2i(50,300),400,30,1.0,3.0,euler_deg[2]);
+        cv::resize(right_im_calib,right_im_calib,right_im_calib.size()/2);
+        CreateErrorItem("x",right_im_calib,cv::Point2i(50,50),400,30,0.8,3.0,euler_deg[0]);
+        CreateErrorItem("y",right_im_calib,cv::Point2i(50,150),400,30,0.8,3.0,euler_deg[1]);
+        CreateErrorItem("z",right_im_calib,cv::Point2i(50,250),400,30,0.8,3.0,euler_deg[2]);
         cv::imshow("test_rect",right_im_calib);  
         cv::waitKey(0);    
     }
@@ -100,17 +100,39 @@ void EstimateStereoPose::AnalysisStereoPose(const cv::Mat& left_im_raw,const cv:
 
 Eigen::Vector3d EstimateStereoPose::EstimatePose(cv::Mat& left_im_calib,cv::Mat& right_im_calib,
     const VecPointD& left_points,const VecPointD& right_points) {
-    cv::Mat H = cv::findHomography(left_points,right_points,0,1.0);
+    cv::Mat H = cv::findHomography(left_points,right_points,0,3.0);
+    VecPointD re_right_points;
+    cv::perspectiveTransform(left_points,re_right_points,H);
+    double d_err_sum = 0;
+    for (size_t i = 0; i < left_points.size(); i++) {
+        cv::Point2d p_err = re_right_points[i] - right_points[i];
+        double d_err = p_err.x * p_err.x + p_err.y * p_err.y;
+        d_err_sum += d_err;
+        cv::circle(right_im_calib, re_right_points[i], 2, 255, 2,cv::FILLED);
+    }
+
+
+    double d_err_sqrt = sqrt(d_err_sum / left_points.size());
+    std::cout << "Homography Distance Error: " << d_err_sqrt << std::endl;
+
     std::vector<cv::Mat> Rs, Ts, normals;
     cv::decomposeHomographyMat(H, K_, Rs, Ts, normals);
     for(size_t i = 0; i < Rs.size(); i++) {
-        std::cout << i << " -- R:\n" << Rs[i] << std::endl << Ts[i] << std::endl;
+        std::cout << i << " -- Normal:\n" << normals[i].t() << " transpose: " << Ts[i].t() << std::endl;
     }
-    
+    std::vector<int> sol;
     Eigen::Matrix3d R;
-    cv::cv2eigen(Rs[0],R);
+    cv::filterHomographyDecompByVisibleRefpoints(Rs,normals,left_points,right_points,sol);
+    if (sol.size() != 1) {
+        cv::cv2eigen(Rs[0],R);
+        printf("Filter Failed!Use 0 pose as default!\n");
+    }  else {
+        printf("Filter Success!Use %d pose!\n",sol[0]);
+        cv::cv2eigen(Rs[sol[0]],R);
+    }
     Eigen::Vector3d euler;
     euler = R.eulerAngles(2,1,0) * 180. * M_1_PI;
+    std::cout << "Angle Error : " << euler.transpose() << std::endl;
     return euler;
 }
 
@@ -140,7 +162,6 @@ void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point
     float width_ratio = 0.5 * w / range;
     int sub_height = 0.8 * h;
     int sub_width = width_ratio * fabs(limit_error);
-    printf("width_ratio: %f, sub_width : %d,sub_height: %d\n",width_ratio,sub_width,sub_height);
     cv::Point2i sub_start_pos;
     sub_start_pos.y = mid_start_pos.y + 0.1 * h;
     if (limit_error >= 0) {
@@ -156,8 +177,8 @@ void EstimateStereoPose::CreateErrorItem(std::string title,cv::Mat& im,cv::Point
     sub_rec.CreateRectangle(im);
 
     //step3: Lines 
-    int line_start_y = mid_start_pos.y - h;
-    int line_end_y = mid_start_pos.y +  2 * h;
+    int line_start_y = mid_start_pos.y - 0.8 * h;
+    int line_end_y = mid_start_pos.y +  h + 0.8 * h;
     cv::Point2i start_line(mid_start_pos.x,line_start_y);
     cv::Point2i end_line(mid_start_pos.x,line_end_y);
     cv::line(im,start_line,end_line,cv::Scalar(b_gray,b_gray,b_gray),2);

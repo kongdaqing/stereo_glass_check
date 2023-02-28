@@ -3,7 +3,7 @@
 #include "eigen3/Eigen/Dense"
 using namespace Eigen;
 
-typedef std::vector<cv::Point2d> VecPointD;
+typedef std::vector<cv::Point2f> VecPointD;
 
 
 
